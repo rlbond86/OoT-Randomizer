@@ -1479,6 +1479,9 @@ def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
     if world.ocarina_songs:
         replace_songs(rom)
 
+    # remove actors marked for deletion
+    erase_marked_actors(rom)
+
     # actually write the save table to rom
     world.distribution.give_items(save_context)
     if world.starting_age == 'adult':
@@ -1576,27 +1579,111 @@ chestTypeMap = {
 }
 
 
-def room_get_actors(rom, actor_func, room_data, scene, alternate=None):
+def read_actor_data(rom, address, header_entry):
+    command = rom.read_byte(header_entry)
+    if command == 0x0E:
+        return read_transition_actor_data(rom, address)
+    elif command == 0x01:
+        return read_nontransition_actor_data(rom, address)
+    else:
+        raise KeyError("invalid header command at 0x{:X} (0x{:X})".format(header_entry, command))
+
+
+def read_actor_info(rom, header_entry, actor_list, index, more):
+    address = actor_list + index * 16
+    data = read_actor_data(rom, address, header_entry)
+    info = {'actor_data': data,
+            'header_entry': header_entry,
+            'actor_list': actor_list,
+            'index': index,
+            'actor_id': data['actor_id'],
+            'rom': rom,
+            'actor_address': address}
+    info.update(more)
+    return info
+
+
+def to_signed_16(uvalue):
+    return uvalue if uvalue < 32768 else uvalue-65536
+
+def to_unsigned_16(svalue):
+    return svalue if svalue >= 0 else svalue+65536
+
+
+def read_nontransition_actor_data(rom, address):
+    return {'actor_id':   rom.read_int16(address),
+            'x_position': to_signed_16(rom.read_int16(address+ 2)),
+            'y_position': to_signed_16(rom.read_int16(address+ 4)),
+            'z_position': to_signed_16(rom.read_int16(address+ 6)),
+            'x_rotation': to_signed_16(rom.read_int16(address+ 8)),
+            'y_rotation': to_signed_16(rom.read_int16(address+10)),
+            'z_rotation': to_signed_16(rom.read_int16(address+12)),
+            'variable':   rom.read_int16(address+14),
+            'type': "actor"}
+
+
+def read_transition_actor_data(rom, address):
+    return {'front_room':   rom.read_byte( address   ),
+            'front_camera': rom.read_byte( address+ 1),
+            'back_room':    rom.read_byte( address+ 2),
+            'back_camera':  rom.read_byte( address+ 3),
+            'actor_id':     rom.read_int16(address+ 4),
+            'x_position':   to_signed_16(rom.read_int16(address+ 6)),
+            'y_position':   to_signed_16(rom.read_int16(address+ 8)),
+            'z_position':   to_signed_16(rom.read_int16(address+10)),
+            'y_rotation':   to_signed_16(rom.read_int16(address+12)),
+            'variable':     rom.read_int16(address+14),
+            'type': "transition"}
+
+
+def write_actor_data(rom, address, data):
+    if data['type'] == "transition":
+        rom.write_byte( address   , data['front_room'])
+        rom.write_byte( address+ 1, data['front_camera'])
+        rom.write_byte( address+ 2, data['back_room'])
+        rom.write_byte( address+ 3, data['back_camera'])
+        rom.write_int16(address+ 4, data['actor_id'])
+        rom.write_int16(address+ 6, to_unsigned_16(data['x_position']))
+        rom.write_int16(address+ 8, to_unsigned_16(data['y_position']))
+        rom.write_int16(address+10, to_unsigned_16(data['z_position']))
+        rom.write_int16(address+12, to_unsigned_16(data['y_rotation']))
+        rom.write_int16(address+14, data['variable'])
+    else:
+        rom.write_int16(address   , data['actor_id'])
+        rom.write_int16(address+ 2, to_unsigned_16(data['x_position']))
+        rom.write_int16(address+ 4, to_unsigned_16(data['y_position']))
+        rom.write_int16(address+ 6, to_unsigned_16(data['z_position']))
+        rom.write_int16(address+ 8, to_unsigned_16(data['x_rotation']))
+        rom.write_int16(address+10, to_unsigned_16(data['y_rotation']))
+        rom.write_int16(address+12, to_unsigned_16(data['z_rotation']))
+        rom.write_int16(address+14, data['variable'])
+
+
+def room_get_actors(rom, actor_func, room_data, scene, room, alternate=None):
     actors = {}
     room_start = alternate if alternate else room_data
     command = 0
     while command != 0x14: # 0x14 = end header
         command = rom.read_byte(room_data)
         if command == 0x01: # actor list
+            header_entry = room_data
             actor_count = rom.read_byte(room_data + 1)
             actor_list = room_start + (rom.read_int32(room_data + 4) & 0x00FFFFFF)
-            for _ in range(0, actor_count):
-                actor_id = rom.read_int16(actor_list)
-                entry = actor_func(rom, actor_id, actor_list, scene)
+            more_info = {'scene': scene,
+                         'room': room,
+                         'command': command,
+                         'alternate': alternate is not None}
+            for n in range(0, actor_count):
+                info = read_actor_info(rom, header_entry, actor_list, n, more_info)
+                entry = actor_func(**info)
                 if entry:
-                    actors[actor_list] = entry
-                actor_list = actor_list + 16
+                    actors[info['actor_address']] = entry
         if command == 0x18: # Alternate header list
             header_list = room_start + (rom.read_int32(room_data + 4) & 0x00FFFFFF)
             for alt_id in range(0,3):
                 header_data = room_start + (rom.read_int32(header_list) & 0x00FFFFFF)
                 if header_data != 0 and not alternate:
-                    actors.update(room_get_actors(rom, actor_func, header_data, scene, room_start))
+                    actors.update(room_get_actors(rom, actor_func, header_data, scene, room, room_start))
                 header_list = header_list + 4
         room_data = room_data + 8
     return actors
@@ -1613,22 +1700,27 @@ def scene_get_actors(rom, actor_func, scene_data, scene, alternate=None, process
         if command == 0x04: #room list
             room_count = rom.read_byte(scene_data + 1)
             room_list = scene_start + (rom.read_int32(scene_data + 4) & 0x00FFFFFF)
-            for _ in range(0, room_count):
+            for room in range(0, room_count):
                 room_data = rom.read_int32(room_list);
 
                 if not room_data in processed_rooms:
-                    actors.update(room_get_actors(rom, actor_func, room_data, scene))
+                    actors.update(room_get_actors(rom, actor_func, room_data, scene, room))
                     processed_rooms.append(room_data)
                 room_list = room_list + 8
         if command == 0x0E: #transition actor list
+            header_entry = scene_data
             actor_count = rom.read_byte(scene_data + 1)
             actor_list = scene_start + (rom.read_int32(scene_data + 4) & 0x00FFFFFF)
-            for _ in range(0, actor_count):
-                actor_id = rom.read_int16(actor_list + 4)
-                entry = actor_func(rom, actor_id, actor_list, scene)
+            actor_list_start = actor_list
+            more_info = {'scene': scene,
+                         'room': None,
+                         'command': command,
+                         'alternate': alternate is not None}
+            for n in range(0, actor_count):
+                info = read_actor_info(rom, header_entry, actor_list, n, more_info)
+                entry = actor_func(**info)
                 if entry:
-                    actors[actor_list] = entry
-                actor_list = actor_list + 16
+                    actors[info['actor_address']] = entry
         if command == 0x18: # Alternate header list
             header_list = scene_start + (rom.read_int32(scene_data + 4) & 0x00FFFFFF)
             for alt_id in range(0,3):
@@ -1641,13 +1733,115 @@ def scene_get_actors(rom, actor_func, scene_data, scene, alternate=None, process
     return actors
 
 
-def get_actor_list(rom, actor_func):
+def get_actor_list(rom, actor_func, *, exclude_deleted=True):
+    if exclude_deleted:
+        func = lambda **kwargs: actor_func(**kwargs) if not is_marked_for_deletion(kwargs['actor_data']) else None
+    else:
+        func = actor_func
     actors = {}
     scene_table = 0x00B71440
     for scene in range(0x00, 0x65):
-        scene_data = rom.read_int32(scene_table + (scene * 0x14));
-        actors.update(scene_get_actors(rom, actor_func, scene_data, scene))
+        scene_data = rom.read_int32(scene_table + (scene * 0x14))
+        actors.update(scene_get_actors(rom, func, scene_data, scene))
     return actors
+
+
+def actor_matches(actor_info, match_map):
+    info = actor_info.copy()
+    info.update(info.get('actor_data', {}))
+    return match_map is None or info.items() >= match_map.items() # check for superset
+
+
+# erase any actor for which actor_func returns truthy
+def mark_actors_for_erasure(rom, actor_func):
+    def mark_for_deletion(**kwargs):
+        if actor_func(**kwargs):
+            actor_data = kwargs['actor_data']
+            actor_data['x_rotation'] = to_signed_16(0xDEAD)
+            actor_data['y_rotation'] = to_signed_16(0xDEAD)
+            actor_data['z_rotation'] = to_signed_16(0xDEAD)
+            actor_data['front_camera'] = 0xDE
+            actor_data['back_camera'] = 0xAD
+            return actor_data
+    modify_actors(rom, mark_for_deletion)
+
+
+def mark_matching_actors_for_erasure(rom, actor_map):
+    def func(**kwargs):
+        if actor_matches(kwargs, actor_map):
+            return True
+    mark_actors_for_erasure(rom, func)
+
+
+def is_marked_for_deletion(actor_data):
+    if actor_data['type'] == "actor":
+        if (to_unsigned_16(actor_data['x_rotation']) == 0xDEAD and
+            to_unsigned_16(actor_data['y_rotation']) == 0xDEAD and
+            to_unsigned_16(actor_data['z_rotation']) == 0xDEAD):
+                return True
+    else:
+        if (to_unsigned_16(actor_data['y_rotation']) == 0xDEAD and
+            actor_data['front_camera'] == 0xDE and
+            actor_data['back_camera']  == 0xAD):
+                return True
+    return False
+
+
+def erase_marked_actors(rom):
+    data = get_actor_list(rom, lambda **kwargs: kwargs if is_marked_for_deletion(kwargs['actor_data']) else None, exclude_deleted=False)
+    # group actors by header
+    header_entries = set(item['header_entry'] for item in data.values())
+    for header_entry in header_entries:
+        first_item = next(item for item in data.values() if item['header_entry'] == header_entry)
+        start_address = first_item['actor_list']
+        src_address = start_address
+        actor_count = rom.read_byte(header_entry + 1)
+        keep_list = []
+        delete_list = []
+        for _ in range(0, actor_count):
+            actor = read_actor_data(rom, src_address, header_entry)
+            if src_address not in data:
+                keep_list.append(actor)
+            else:
+                delete_list.append(actor)
+            src_address += 16
+
+        # reduce actor count
+        rom.write_byte(header_entry + 1, len(keep_list))
+
+        # move kept actors to front
+        dest_address = start_address
+        for actor in keep_list:
+            write_actor_data(rom, dest_address, actor)
+            dest_address += 16
+
+        # move deleted to back
+        for actor in delete_list:
+            write_actor_data(rom, dest_address, actor)
+            dest_address += 16
+
+
+# modify any actor for which actor_func returns an actor_data map
+def modify_actors(rom, actor_func):
+    actors = get_actor_list(rom, actor_func)
+    actors = {k:v for k,v in actors.items() if v}
+    for address, data in actors.items():
+        #if 'x_rotation' not in data or 'front_camera' not in data:
+        #    def get_info(**kwargs):
+        #        if kwargs['actor_address'] == address:
+        #            return kwargs
+        #    info = get_actor_list(rom, get_info)[address]
+        #    print("modified actor (scene={}, room={}) {}".format(info['scene'], info['room'], data))
+        write_actor_data(rom, address, data)
+
+
+def modify_matching_actors(rom, actor_map, data_modification):
+    def func(**kwargs):
+        if actor_matches(kwargs, actor_map):
+            actor_data = kwargs['actor_data']
+            actor_data.update(data_modification)
+            return actor_data
+    modify_actors(rom, func)
 
 
 def get_override_itemid(override_table, scene, type, flags):
@@ -1656,36 +1850,37 @@ def get_override_itemid(override_table, scene, type, flags):
             return entry[4]
     return None
 
+
 def remove_entrance_blockers(rom):
-    def remove_entrance_blockers_do(rom, actor_id, actor, scene):
+    def remove_entrance_blockers_do(rom, actor_id, actor_address, scene, **kwargs):
         if actor_id == 0x014E and scene == 97:
-            actor_var = rom.read_int16(actor + 14);
+            actor_var = rom.read_int16(actor_address + 14);
             if actor_var == 0xFF01:
-                rom.write_int16(actor + 14, 0x0700)
+                rom.write_int16(actor_address + 14, 0x0700)
         if actor_id == 0x0145:
-            rom.write_int16(actor, 0x014E)
-            rom.write_int16(actor + 14, 0x0700)
+            rom.write_int16(actor_address, 0x014E)
+            rom.write_int16(actor_address + 14, 0x0700)
 
     get_actor_list(rom, remove_entrance_blockers_do)
 
 def set_cow_id_data(rom, world):
-    def set_cow_id(rom, actor_id, actor, scene):
+    def set_cow_id(rom, actor_id, actor_address, scene, **kwargs):
         nonlocal last_scene
         nonlocal cow_count
         nonlocal last_actor
 
         if actor_id == 0x01C6: #Cow
-            if scene == last_scene and last_actor != actor:
+            if scene == last_scene and last_actor != actor_address:
                 cow_count += 1
             else:
                 cow_count = 1
 
             last_scene = scene
-            last_actor = actor
+            last_actor = actor_address
             if world.dungeon_mq['Jabu Jabus Belly'] and scene == 2: #If its an MQ jabu cow
-                rom.write_int16(actor + 0x8, 1 if cow_count == 17 else 0) #Give all wall cows ID 0, and set cow 11's ID to 1
+                rom.write_int16(actor_address + 0x8, 1 if cow_count == 17 else 0) #Give all wall cows ID 0, and set cow 11's ID to 1
             else:
-                rom.write_int16(actor + 0x8, cow_count)
+                rom.write_int16(actor_address + 0x8, cow_count)
 
     last_actor = -1
     last_scene = -1
@@ -1695,28 +1890,28 @@ def set_cow_id_data(rom, world):
 
 
 def set_grotto_shuffle_data(rom, world):
-    def get_grotto_data(rom, actor_id, actor, scene):
+    def get_grotto_data(rom, actor_id, actor_address, scene, **kwargs):
         if actor_id == 0x009B: #Grotto
-            actor_zrot = rom.read_int16(actor + 12)
-            actor_var = rom.read_int16(actor + 14)
+            actor_zrot = rom.read_int16(actor_address + 12)
+            actor_var = rom.read_int16(actor_address + 14)
 
-            grotto_table[actor] = {
+            grotto_table[actor_address] = {
                 'id': (scene << 16) + actor_var,
                 'scene': (actor_var >> 8) & 0xF0,
                 'entrance': actor_zrot & 0x00FF,
                 'content': actor_var & 0x00FF,
             }
 
-    def override_grotto_data(rom, actor_id, actor, scene):
+    def override_grotto_data(rom, actor_id, actor_address, scene, **kwargs):
         if actor_id == 0x009B: #Grotto
-            actor_zrot = rom.read_int16(actor + 12)
-            actor_var = rom.read_int16(actor + 14)
+            actor_zrot = rom.read_int16(actor_address + 12)
+            actor_var = rom.read_int16(actor_address + 14)
             grotto_type = (actor_var >> 8) & 0x0F
 
-            grotto_data = grotto_override_table[actor]
-            rom.write_byte(actor + 14, grotto_type + grotto_data['scene'])
-            rom.write_byte(actor + 13, grotto_data['entrance'])
-            rom.write_byte(actor + 15, grotto_data['content'])
+            grotto_data = grotto_override_table[actor_address]
+            rom.write_byte(actor_address + 14, grotto_type + grotto_data['scene'])
+            rom.write_byte(actor_address + 13, grotto_data['entrance'])
+            rom.write_byte(actor_address + 15, grotto_data['content'])
 
     # Retrieve the original grotto data
     grotto_table = {}
@@ -1739,18 +1934,18 @@ def set_grotto_shuffle_data(rom, world):
 
 
 def set_deku_salesman_data(rom):
-    def set_deku_salesman(rom, actor_id, actor, scene):
+    def set_deku_salesman(rom, actor_id, actor_address, scene, **kwargs):
         if actor_id == 0x0195: #Salesman
-            actor_var = rom.read_int16(actor + 14)
+            actor_var = rom.read_int16(actor_address + 14)
             if actor_var == 6:
-                rom.write_int16(actor + 14, 0x0003)
+                rom.write_int16(actor_address + 14, 0x0003)
 
     get_actor_list(rom, set_deku_salesman)
 
 
 def get_locked_doors(rom, world):
-    def locked_door(rom, actor_id, actor, scene):
-        actor_var = rom.read_int16(actor + 14)
+    def locked_door(rom, actor_id, actor_address, scene, **kwargs):
+        actor_var = rom.read_int16(actor_address + 14)
         actor_type = actor_var >> 6
         actor_flag = actor_var & 0x003F
 
