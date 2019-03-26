@@ -349,11 +349,13 @@ class State(object):
 
 
     def can_buy_bombchus(self):
-        return self.has('Buy Bombchu (5)') or \
-               self.has('Buy Bombchu (10)') or \
-               self.has('Buy Bombchu (20)') or \
-               self.can_reach('Castle Town Bombchu Bowling', age='either') or \
-               self.can_reach('Haunted Wasteland Bombchu Salesman', 'Location', age='either')
+        return (self.has('Buy Bombchu (5)') or \
+                    self.has('Buy Bombchu (10)') or \
+                    self.has('Buy Bombchu (20)') or \
+                    self.can_reach('Castle Town Bombchu Bowling', age='either') or \
+                    self.can_reach('Haunted Wasteland Bombchu Salesman', 'Location', age='either')
+               ) and not self.world.bombchus_removed
+
 
 
     def has_bombchus(self):
@@ -372,7 +374,7 @@ class State(object):
 
 
     def has_explosives(self):
-        return self.has_bombs() or self.has_bombchus()
+        return self.has_bombs() or (not self.world.bombchus_removed and self.has_bombchus())
 
 
     def can_blast_or_smash(self):

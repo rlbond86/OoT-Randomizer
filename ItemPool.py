@@ -598,6 +598,9 @@ def generate_itempool(world):
         junk_pool[:] = [('Ice Trap', 1)]
 
     for location, item in eventlocations.items():
+        if item == 'Bombchus' and world.bombchus_removed:
+            # put junk item here
+            item = 'Rupee (1)'
         world.push_item(location, ItemFactory(item, world))
         world.get_location(location).locked = True
 
@@ -1040,6 +1043,11 @@ def get_pool_core(world):
         replace_max_item(pool, 'Progressive Wallet', 0)
         for i in [1, 2, 3]: # collect wallets
             world.state.collect(ItemFactory('Progressive Wallet'))
+
+    # ensure no bombchus if relevant option enabled
+    if world.bombchus_removed:
+        for item in ('Bombchus', 'Bombchus (5)', 'Bombchus (10)', 'Bombchus (20)'):
+            replace_max_item(pool, item, 0)
 
     # Make sure our pending_junk_pool is empty. If not, remove some random junk here.
     if pending_junk_pool:

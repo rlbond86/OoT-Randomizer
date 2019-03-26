@@ -78,10 +78,10 @@
         "locations": {
             "Ganons Castle Spirit Trial First Chest": "Progressive_Hookshot",
             "Ganons Castle Spirit Trial Second Chest": "
-                Progressive_Hookshot and has_bombchus and can_see_with_lens",
+                Progressive_Hookshot and (has_bombchus or bombchus_removed) and can_see_with_lens",
             "Ganons Castle Spirit Trial Clear": "
                 can_use(Light_Arrows) and Mirror_Shield and 
-                has_bombchus and Progressive_Hookshot"
+                (has_bombchus or bombchus_removed) and Progressive_Hookshot"
         }
     },
     {

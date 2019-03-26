@@ -1363,6 +1363,26 @@ def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
         for _,[door_byte, door_bits] in locked_doors.items():
             save_context.write_bits(door_byte, door_bits)
 
+    if world.bombchus_removed:
+        # unlock door in Ganons Castle Spirit Trial (Vanilla and MQ)
+        modify_matching_actors(rom, {'scene': 13, 'room': None, 'actor_id': 0x2E, 'front_room': 18, 'back_room': 18}, {'variable': 0x3F})
+        if not world.dungeon_mq['Ganons Castle']:
+            # remove torches and (now useless) switch
+            mark_matching_actors_for_erasure(rom, {'scene': 13, 'room': 18, 'actor_id': 0x5E})
+            mark_matching_actors_for_erasure(rom, {'scene': 13, 'room': 18, 'actor_id': 0x12A, 'variable': 0x1A03})
+        else:
+            # remove (now useless) switch
+            mark_matching_actors_for_erasure(rom, {'scene': 13, 'room': 18, 'actor_id': 0x12A})
+
+        if world.dungeon_mq['Spirit Temple']:
+            # remove boulders
+            mark_matching_actors_for_erasure(rom, {'scene': 6, 'room': 0, 'actor_id': 0x127, 'y_position': 280})   # entry room
+            mark_matching_actors_for_erasure(rom, {'scene': 6, 'room': 1, 'actor_id': 0x127})                      # first child room
+            mark_matching_actors_for_erasure(rom, {'scene': 6, 'room': 2, 'actor_id': 0x127, 'z_position': -1340}) # mesh grate room
+
+        # remove bombchu salesman
+        mark_matching_actors_for_erasure(rom, {'actor_id':  0x016A}) # Haunted Desert
+
     # Fix chest animations
     if world.bombchus_in_logic:
         bombchu_ids = [0x6A, 0x03, 0x6B]
@@ -1772,14 +1792,14 @@ def mark_actors_for_erasure(rom, actor_func):
             actor_data['front_camera'] = 0xDE
             actor_data['back_camera'] = 0xAD
             return actor_data
-    modify_actors(rom, mark_for_deletion)
+    return modify_actors(rom, mark_for_deletion)
 
 
 def mark_matching_actors_for_erasure(rom, actor_map):
     def func(**kwargs):
         if actor_matches(kwargs, actor_map):
             return True
-    mark_actors_for_erasure(rom, func)
+    return mark_actors_for_erasure(rom, func)
 
 
 def is_marked_for_deletion(actor_data):
@@ -1826,6 +1846,7 @@ def erase_marked_actors(rom):
 
         # move deleted to back
         for actor in delete_list:
+            #print("deleted actor (scene={}, room={}) {}".format(first_item['scene'], first_item['room'], actor))
             write_actor_data(rom, dest_address, actor)
             dest_address += 16
 
@@ -1842,6 +1863,7 @@ def modify_actors(rom, actor_func):
         #    info = get_actor_list(rom, get_info)[address]
         #    print("modified actor (scene={}, room={}) {}".format(info['scene'], info['room'], data))
         write_actor_data(rom, address, data)
+    return len(actors)
 
 
 def modify_matching_actors(rom, actor_map, data_modification):
@@ -1850,7 +1872,7 @@ def modify_matching_actors(rom, actor_map, data_modification):
             actor_data = kwargs['actor_data']
             actor_data.update(data_modification)
             return actor_data
-    modify_actors(rom, func)
+    return modify_actors(rom, func)
 
 
 def get_override_itemid(override_table, scene, type, flags):

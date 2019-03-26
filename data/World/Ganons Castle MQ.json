@@ -83,22 +83,22 @@
             "Ganons Castle MQ Spirit Trial First Chest": "(has_bow or logic_rusted_switches) and Hammer",
             "Ganons Castle MQ Spirit Trial Second Chest": "
                 (has_bow or logic_rusted_switches) and Hammer and 
-                has_bombchus and can_see_with_lens",
+                (has_bombchus or bombchus_removed) and can_see_with_lens",
             "Ganons Castle MQ Spirit Trial Sun Front Left Chest": "
-                Hammer and has_bombchus and 
+                Hammer and (has_bombchus or bombchus_removed) and
                 can_use(Fire_Arrows) and Mirror_Shield",
             "Ganons Castle MQ Spirit Trial Sun Back Left Chest": "
-                Hammer and has_bombchus and 
+                Hammer and (has_bombchus or bombchus_removed) and
                 can_use(Fire_Arrows) and Mirror_Shield",
             "Ganons Castle MQ Spirit Trial Golden Gauntlets Chest": "
-                Hammer and has_bombchus and 
+                Hammer and (has_bombchus or bombchus_removed) and
                 can_use(Fire_Arrows) and Mirror_Shield",
             "Ganons Castle MQ Spirit Trial Sun Back Right Chest": "
-                Hammer and has_bombchus and 
+                Hammer and (has_bombchus or bombchus_removed) and
                 can_use(Fire_Arrows) and Mirror_Shield",
             "Ganons Castle Spirit Trial Clear": "
                 can_use(Light_Arrows) and Hammer and 
-                has_bombchus and Fire_Arrows and Mirror_Shield"
+                (has_bombchus or bombchus_removed) and Fire_Arrows and Mirror_Shield"
         }
     },
     {

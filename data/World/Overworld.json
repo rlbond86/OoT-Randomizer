@@ -518,8 +518,8 @@
     {
         "region_name": "Castle Town Bombchu Bowling",
         "locations": {
-            "Bombchu Bowling Bomb Bag": "has_bombchus",
-            "Bombchu Bowling Piece of Heart": "has_bombchus"
+            "Bombchu Bowling Bomb Bag": "has_bombchus or (bombchus_removed and has_bombs)",
+            "Bombchu Bowling Piece of Heart": "has_bombchus or (bombchus_removed and has_bombs)"
         }
     },
     {

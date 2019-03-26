@@ -56,6 +56,7 @@ class World(object):
         self.shuffle_grotto_entrances = self.entrance_shuffle == 'indoors'
         self.shuffle_interior_entrances = self.entrance_shuffle == 'indoors'
         self.bombchus_in_logic = self.bombchu_logic in ('included', 'discounted')
+        self.bombchus_removed = self.bombchu_logic == 'removed'
 
         # trials that can be skipped will be decided later
         self.skipped_trials = {

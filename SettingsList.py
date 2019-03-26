@@ -761,6 +761,7 @@ setting_infos = [
             'included':   'Included in Logic',
             'discounted': 'Included in Logic (Discounted)',
             'excluded':   'Excluded from Logic',
+            'removed':    'Removed from Item Pool',
         },
         gui_text       = 'Bombchus',
         gui_group      = 'world',
@@ -780,6 +781,14 @@ setting_infos = [
             consider Bombchus at all, but they can still
             be found randomly. Bombchu Bowling opens
             with the Bomb Bag.
+
+            'Removed from Item Pool': Bombchus are
+            removed from the item pool and the Haunted
+            Desert Bombchu salesman is removed. The door
+            in the Spirit Trial in Ganon's Castle is
+            unlocked, and boulders requiring Bombchus in 
+            the Spirit Temple MQ are removed. Bombchu 
+            Bowling opens with the Bomb Bag.
         ''',
         shared         = True,
         gui_params     = {
