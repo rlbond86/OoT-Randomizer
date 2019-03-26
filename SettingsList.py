@@ -754,30 +754,38 @@ setting_infos = [
             'randomize_key': 'randomize_settings',
         },
     ),
-    Checkbutton(
-        name           = 'bombchus_in_logic',
-        gui_text       = 'Bombchus Are Considered in Logic',
+    Combobox(
+        name           = 'bombchu_logic',
+        default        = 'included',
+        choices        = {
+            'included':  'Included in Logic',
+            'excluded':  'Excluded from Logic',
+        },
+        gui_text       = 'Bombchus',
         gui_group      = 'world',
         gui_tooltip    = '''\
-            Bombchus are properly considered in logic.
+            Determines Bombchu logic.
 
-            The first Bombchu pack will always be 20.
-            Subsequent packs will be 5 or 10 based on
-            how many you have.
+            'Included in Logic': Bombchus are properly
+            considered in logic. The first Bombchu pack
+            will always be 20. Bombchus can be purchased
+            from shops once they have been found, and
+            are additionally stocked at the Kokiri Shop
+            and the Bazaar. Bombchu Bowling opens with
+            Bombchus.
 
-            Bombchus can be purchased for 60/99/180
-            rupees once they have been found.
-
-            Bombchu Bowling opens with Bombchus.
-            Bombchus are available at Kokiri Shop
-            and the Bazaar. Bombchu refills cannot
-            be bought until Bombchus have been
-            obtained.
+            'Excluded from Logic': Logic does not
+            consider Bombchus at all, but they can still
+            be found randomly. Bombchu Bowling opens
+            with the Bomb Bag.
         ''',
-        default        = True,
         shared         = True,
         gui_params     = {
             'randomize_key': 'randomize_settings',
+            'distribution':  [
+                ('included', 1),
+                ('excluded', 1)
+            ]
         },
     ),
     Checkbutton(
