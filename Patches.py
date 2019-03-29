@@ -1883,24 +1883,20 @@ def get_override_itemid(override_table, scene, type, flags):
 
 
 def remove_entrance_blockers(rom):
-    def remove_entrance_blockers_do(rom, actor_id, actor_address, scene, **kwargs):
-        if actor_id == 0x014E and scene == 97:
-            actor_var = rom.read_int16(actor_address + 14);
-            if actor_var == 0xFF01:
-                rom.write_int16(actor_address + 14, 0x0700)
-        if actor_id == 0x0145:
-            rom.write_int16(actor_address, 0x014E)
-            rom.write_int16(actor_address + 14, 0x0700)
+    # remove Death Mountain Crater boulders blocking Fire Temple entrance as child
+    modify_matching_actors(rom, {'scene': 97, 'actor_id': 0x014E, 'variable': 0xFF01}, {'variable': 0x0700}) 
+    
+    # remove stone blocking Well entrance as adult
+    modify_matching_actors(rom, {'actor_id': 0x0145}, {'actor_id': 0x14E, 'variable': 0x0700}) 
 
-    get_actor_list(rom, remove_entrance_blockers_do)
-
+    
 def set_cow_id_data(rom, world):
-    def set_cow_id(rom, actor_id, actor_address, scene, **kwargs):
+    def set_cow_id(rom, actor_data, actor_address, scene, **kwargs):
         nonlocal last_scene
         nonlocal cow_count
         nonlocal last_actor
 
-        if actor_id == 0x01C6: #Cow
+        if actor_data['actor_id'] == 0x01C6: #Cow
             if scene == last_scene and last_actor != actor_address:
                 cow_count += 1
             else:
@@ -1909,9 +1905,10 @@ def set_cow_id_data(rom, world):
             last_scene = scene
             last_actor = actor_address
             if world.dungeon_mq['Jabu Jabus Belly'] and scene == 2: #If its an MQ jabu cow
-                rom.write_int16(actor_address + 0x8, 1 if cow_count == 17 else 0) #Give all wall cows ID 0, and set cow 11's ID to 1
+                actor_data['x_rotation'] = 1 if cow_count == 17 else 0
             else:
-                rom.write_int16(actor_address + 0x8, cow_count)
+                actor_data['x_rotation'] = cow_count
+            write_actor_data(rom, actor_address, actor_data)
 
     last_actor = -1
     last_scene = -1
@@ -1921,10 +1918,10 @@ def set_cow_id_data(rom, world):
 
 
 def set_grotto_shuffle_data(rom, world):
-    def get_grotto_data(rom, actor_id, actor_address, scene, **kwargs):
-        if actor_id == 0x009B: #Grotto
-            actor_zrot = rom.read_int16(actor_address + 12)
-            actor_var = rom.read_int16(actor_address + 14)
+    def get_grotto_data(rom, actor_data, actor_address, scene, **kwargs):
+        if actor_data['actor_id'] == 0x009B: #Grotto
+            actor_zrot = to_unsigned_16(actor_data['z_rotation'])
+            actor_var = actor_data['variable']
 
             grotto_table[actor_address] = {
                 'id': (scene << 16) + actor_var,
@@ -1933,16 +1930,17 @@ def set_grotto_shuffle_data(rom, world):
                 'content': actor_var & 0x00FF,
             }
 
-    def override_grotto_data(rom, actor_id, actor_address, scene, **kwargs):
-        if actor_id == 0x009B: #Grotto
-            actor_zrot = rom.read_int16(actor_address + 12)
-            actor_var = rom.read_int16(actor_address + 14)
+    def override_grotto_data(rom, actor_data, actor_address, **kwargs):
+        if actor_data['actor_id'] == 0x009B: #Grotto
+            actor_zrot = to_unsigned_16(actor_data['z_rotation'])
+            actor_var = actor_data['variable']
             grotto_type = (actor_var >> 8) & 0x0F
 
             grotto_data = grotto_override_table[actor_address]
-            rom.write_byte(actor_address + 14, grotto_type + grotto_data['scene'])
-            rom.write_byte(actor_address + 13, grotto_data['entrance'])
-            rom.write_byte(actor_address + 15, grotto_data['content'])
+            
+            actor_data['z_rotation'] = to_signed_16((actor_zrot & 0xFF00) | grotto_data['entrance'])
+            actor_data['variable'] = ((grotto_type + grotto_data['scene']) << 8) | grotto_data['content']
+            write_actor_data(rom, actor_address, actor_data)
 
     # Retrieve the original grotto data
     grotto_table = {}
@@ -1965,13 +1963,7 @@ def set_grotto_shuffle_data(rom, world):
 
 
 def set_deku_salesman_data(rom):
-    def set_deku_salesman(rom, actor_id, actor_address, scene, **kwargs):
-        if actor_id == 0x0195: #Salesman
-            actor_var = rom.read_int16(actor_address + 14)
-            if actor_var == 6:
-                rom.write_int16(actor_address + 14, 0x0003)
-
-    get_actor_list(rom, set_deku_salesman)
+    modify_matching_actors(rom, {'actor_id': 0x0195, 'variable': 0x0006}, {'variable': 0x0003}) # 0x0195 = salesman
 
 
 def get_locked_doors(rom, world):
