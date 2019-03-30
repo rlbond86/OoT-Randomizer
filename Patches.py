@@ -1200,22 +1200,31 @@ def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
 
     # add a cheaper bombchu pack to the bombchu shop
     # describe
-    update_message_by_id(messages, 0x80FE, '\x08\x05\x41Bombchu   (5 pieces)   60 Rupees\x01\x05\x40This looks like a toy mouse, but\x01it\'s actually a self-propelled time\x01bomb!\x09\x0A', 0x03)
+    price_5_bombchu = 30 if world.bombchu_logic == 'discounted' else 60
+    update_message_by_id(messages, 0x80FE, '\x08\x05\x41Bombchu   (5 pieces)   {} Rupees\x01\x05\x40This looks like a toy mouse, but\x01it\'s actually a self-propelled time\x01bomb!\x09\x0A'.format(price_5_bombchu), 0x03)
     # purchase
-    update_message_by_id(messages, 0x80FF, '\x08Bombchu    5 Pieces    60 Rupees\x01\x01\x1B\x05\x42Buy\x01Don\'t buy\x05\x40\x09', 0x03)
+    update_message_by_id(messages, 0x80FF, '\x08Bombchu    5 Pieces    {} Rupees\x01\x01\x1B\x05\x42Buy\x01Don\'t buy\x05\x40\x09'.format(price_5_bombchu), 0x03)
     rbl_bombchu = shop_items[0x0018]
-    rbl_bombchu.price = 60
+    rbl_bombchu.price = price_5_bombchu
     rbl_bombchu.pieces = 5
     rbl_bombchu.get_item_id = 0x006A
     rbl_bombchu.description_message = 0x80FE
     rbl_bombchu.purchase_message = 0x80FF
 
-    # Reduce 10 Pack Bombchus from 100 to 99 Rupees
-    shop_items[0x0015].price = 99
-    shop_items[0x0019].price = 99
-    shop_items[0x001C].price = 99
-    update_message_by_id(messages, shop_items[0x001C].description_message, "\x08\x05\x41Bombchu  (10 pieces)  99 Rupees\x01\x05\x40This looks like a toy mouse, but\x01it's actually a self-propelled time\x01bomb!\x09\x0A")
-    update_message_by_id(messages, shop_items[0x001C].purchase_message, "\x08Bombchu  10 pieces   99 Rupees\x09\x01\x01\x1B\x05\x42Buy\x01Don't buy\x05\x40")
+    # Reduce 10 Pack Bombchus from 100 to 99 (or 55) Rupees
+    price_10_bombchu = 55 if world.bombchu_logic == 'discounted' else 99
+    shop_items[0x0015].price = price_10_bombchu
+    shop_items[0x0019].price = price_10_bombchu
+    shop_items[0x001C].price = price_10_bombchu
+    update_message_by_id(messages, shop_items[0x001C].description_message, "\x08\x05\x41Bombchu  (10 pieces)  {} Rupees\x01\x05\x40This looks like a toy mouse, but\x01it's actually a self-propelled time\x01bomb!\x09\x0A".format(price_10_bombchu))
+    update_message_by_id(messages, shop_items[0x001C].purchase_message, "\x08Bombchu  10 pieces   {} Rupees\x09\x01\x01\x1B\x05\x42Buy\x01Don't buy\x05\x40".format(price_10_bombchu))
+
+    # modify 20 Pack Bombchus price to 90 if using discounted option
+    if world.bombchu_logic == "discounted":
+        for index in (0x0016, 0x0017, 0x001A, 0x001B):
+            shop_items[index].price = 90
+        update_message_by_id(messages, shop_items[0x001B].description_message, "\x08\x05\x41Bombchu  (20 pieces)   90 Rupees\x01\x05\x40This looks like a toy mouse, but\x01it's actually a self-propelled time\x01bomb!\x09\x0A")
+        update_message_by_id(messages, shop_items[0x001B].purchase_message, "\x08Bombchu   20 pieces    90 Rupees\x09\x01\x01\x1B\x05\x42Buy\x01Don't buy\x05\x40")
 
     shuffle_messages.shop_item_messages = []
 

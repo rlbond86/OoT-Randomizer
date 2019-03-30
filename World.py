@@ -55,7 +55,7 @@ class World(object):
         self.shuffle_dungeon_entrances = self.entrance_shuffle == 'dungeons' or self.entrance_shuffle == 'indoors'
         self.shuffle_grotto_entrances = self.entrance_shuffle == 'indoors'
         self.shuffle_interior_entrances = self.entrance_shuffle == 'indoors'
-        self.bombchus_in_logic = self.bombchu_logic == 'included'
+        self.bombchus_in_logic = self.bombchu_logic in ('included', 'discounted')
 
         # trials that can be skipped will be decided later
         self.skipped_trials = {

@@ -758,8 +758,9 @@ setting_infos = [
         name           = 'bombchu_logic',
         default        = 'included',
         choices        = {
-            'included':  'Included in Logic',
-            'excluded':  'Excluded from Logic',
+            'included':   'Included in Logic',
+            'discounted': 'Included in Logic (Discounted)',
+            'excluded':   'Excluded from Logic',
         },
         gui_text       = 'Bombchus',
         gui_group      = 'world',
@@ -772,7 +773,8 @@ setting_infos = [
             from shops once they have been found, and
             are additionally stocked at the Kokiri Shop
             and the Bazaar. Bombchu Bowling opens with
-            Bombchus.
+            Bombchus. The "Discounted" setting reduces
+            the price of Bombchus.
 
             'Excluded from Logic': Logic does not
             consider Bombchus at all, but they can still
