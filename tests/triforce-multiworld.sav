@@ -14,7 +14,7 @@
 "triforce_hunt": true,
 "logic_rules": "glitchless",
 "all_reachable": true,
-"bombchus_in_logic": true,
+"bombchus_distinct": true,
 "one_item_per_dungeon": false,
 "trials_random": false,
 "trials": 0,

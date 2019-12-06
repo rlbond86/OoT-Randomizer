@@ -15,7 +15,7 @@
 "bridge": "tokens",
 "logic_rules": "glitched",
 "all_reachable": true,
-"bombchus_in_logic": false,
+"bombchus_distinct": false,
 "one_item_per_dungeon": false,
 "trials_random": false,
 "trials": 0,

@@ -141,7 +141,7 @@ class Item(object):
         if self.type in ('Drop', 'Event', 'Shop', 'DungeonReward') or not self.advancement:
             return False
 
-        if self.name.startswith('Bombchus') and not self.world.bombchus_in_logic:
+        if self.name.startswith('Bombchus') and not self.world.bombchus_distinct:
             return False
 
         if self.map or self.compass:

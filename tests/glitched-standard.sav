@@ -12,7 +12,7 @@
     "trials": 0,
     "starting_age": "child",
     "entrance_shuffle": "off",
-    "bombchus_in_logic": false,
+    "bombchus_distinct": false,
     "one_item_per_dungeon": true,
     "mq_dungeons_random": false,
     "mq_dungeons": 0,

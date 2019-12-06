@@ -1286,7 +1286,7 @@ setting_infos = [
         disable        = {
             True : {
                 'sections' : ['open_section', 'shuffle_section', 'shuffle_dungeon_section'],
-                'settings' : ['starting_age', 'triforce_hunt', 'triforce_goal_per_world', 'entrance_shuffle', 'bombchus_in_logic', 'one_item_per_dungeon'],
+                'settings' : ['starting_age', 'triforce_hunt', 'triforce_goal_per_world', 'entrance_shuffle', 'bombchus_distinct', 'one_item_per_dungeon'],
             }
         },
         shared         = True,
@@ -1532,22 +1532,26 @@ setting_infos = [
         shared         = True
     ),
     Checkbutton(
-        name           = 'bombchus_in_logic',
-        gui_text       = 'Bombchus Are Considered in Logic',
+        name           = 'bombchus_distinct',
+        gui_text       = 'Bombchus Are Distinct Items',
         gui_tooltip    = '''\
-            Bombchus are properly considered in logic.
+            When this option is enabled, bombchus are
+            treated as completely separate items from
+            bombs. Bombchu Bowling opens with Bombchus.
+            Bombchu refills cannot be bought until
+            Bombchus have been obtained.
 
             The first Bombchu pack will always be 20.
             Subsequent packs will be 5 or 10 based on
             how many you have.
 
-            Bombchus can be purchased for 60/99/180
-            rupees once they have been found.
+            When disabled, Bombchus are not usable
+            until a Bomb Bag is found.
 
-            Bombchu Bowling opens with Bombchus.
-            Bombchus are available at Kokiri Shop
-            and the Bazaar. Bombchu refills cannot
-            be bought until Bombchus have been obtained.
+            In both cases, Bombchus can be purchased
+            for 60/99/180 rupees once they are
+            available. Bombchus refills are available
+            at the Kokiri Shop and the Bazaar.
         ''',
         default        = False,
         shared         = True,

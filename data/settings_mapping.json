@@ -160,7 +160,7 @@
             "entrance_shuffle",
             "triforce_hunt",
             "triforce_goal_per_world",
-            "bombchus_in_logic",            
+            "bombchus_distinct",
             "one_item_per_dungeon",
             "mq_dungeons_random",
             "mq_dungeons"
