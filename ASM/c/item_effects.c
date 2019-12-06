@@ -4,6 +4,7 @@
 volatile uint8_t MAX_RUPEES = 0;
 
 #define MAX_BOMBCHU 50
+extern uint8_t BOMBCHUS_IN_LOGIC; 
 
 typedef void (*commit_scene_flags_fn)(z64_game_t* game_ctxt);
 #define commit_scene_flags ((commit_scene_flags_fn)0x8009D894)
@@ -115,8 +116,11 @@ void fill_wallet_upgrade(z64_file_t *save, int16_t arg1, int16_t arg2) {
 }
 
 void give_bombchu(z64_file_t *save, int16_t arg1, int16_t arg2) {
-    uint8_t ammo = (uint8_t)save->ammo[8];
+    if (BOMBCHUS_IN_LOGIC) {
+        save->items[Z64_SLOT_BOMBCHU] = Z64_ITEM_BOMBCHU;
+    }
 
+    uint8_t ammo = (uint8_t)save->ammo[8];
     ammo += (uint8_t)arg1;
     if (ammo > MAX_BOMBCHU) {
         ammo = MAX_BOMBCHU;
@@ -125,7 +129,7 @@ void give_bombchu(z64_file_t *save, int16_t arg1, int16_t arg2) {
 }
 
 void give_bomb_bag(z64_file_t *save, int16_t arg1, int16_t arg2) {
-    if (save->items[Z64_SLOT_BOMBCHU] == -1) {
+    if (!BOMBCHUS_IN_LOGIC) {
         save->items[Z64_SLOT_BOMBCHU] = Z64_ITEM_BOMBCHU;
     }
 }
