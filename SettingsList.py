@@ -1533,20 +1533,25 @@ setting_infos = [
     ),
     Checkbutton(
         name           = 'bombchus_distinct',
-        gui_text       = 'Bombchus Are Distinct Items',
+        gui_text       = 'Bombs and Bombchus are Distinct Items',
         gui_tooltip    = '''\
-            When this option is enabled, bombchus are
+            When this option is enabled, Bombchus are
             treated as completely separate items from
-            bombs. Bombchu Bowling opens with Bombchus.
-            Bombchu refills cannot be bought until
-            Bombchus have been obtained.
+            Bombs. Finding a Bomb Bag does not allow
+            the use of Bombchus or the purchase of
+            Bombchu refills, and Bombchus can be used
+            without a Bomb Bag once found. Bombchu
+            Bowling opens with Bombchus.
 
-            The first Bombchu pack will always be 20.
-            Subsequent packs will be 5 or 10 based on
-            how many you have.
+            With this option, the first Bombchu pack
+            will always be 20. Subsequent packs will
+            be 5 or 10 based on how many you have.
 
-            When disabled, Bombchus are not usable
-            until a Bomb Bag is found.
+            When disabled, finding a Bomb Bag also
+            allows the use of Bombchus. Any Bombchus
+            found before discovering a Bomb Bag are
+            kept in inventory, but cannot be used
+            without a Bomb Bag.
 
             In both cases, Bombchus can be purchased
             for 60/99/180 rupees once they are
