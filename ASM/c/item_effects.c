@@ -3,6 +3,8 @@
 #define rupee_cap ((uint16_t*)0x800F8CEC)
 volatile uint8_t MAX_RUPEES = 0;
 
+#define MAX_BOMBCHU 50
+
 typedef void (*commit_scene_flags_fn)(z64_game_t* game_ctxt);
 #define commit_scene_flags ((commit_scene_flags_fn)0x8009D894)
 typedef void (*save_game_fn)(void* unk);
@@ -110,4 +112,20 @@ void give_bean_pack(z64_file_t *save, int16_t arg1, int16_t arg2) {
 void fill_wallet_upgrade(z64_file_t *save, int16_t arg1, int16_t arg2) {
     if(MAX_RUPEES)
         save->rupees = rupee_cap[arg1];
+}
+
+void give_bombchu(z64_file_t *save, int16_t arg1, int16_t arg2) {
+    uint8_t ammo = (uint8_t)save->ammo[8];
+
+    ammo += (uint8_t)arg1;
+    if (ammo > MAX_BOMBCHU) {
+        ammo = MAX_BOMBCHU;
+    }
+    save->ammo[8] = (int8_t)ammo;
+}
+
+void give_bomb_bag(z64_file_t *save, int16_t arg1, int16_t arg2) {
+    if (save->items[Z64_SLOT_BOMBCHU] == -1) {
+        save->items[Z64_SLOT_BOMBCHU] = Z64_ITEM_BOMBCHU;
+    }
 }

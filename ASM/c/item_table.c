@@ -38,9 +38,11 @@ enum dungeon {
 // Action ID 0x41 (give kokiri tunic) is used to indicate no action.
 
 item_row_t item_table[] = {
+    //                baseID  actionID      objectID      upgrade                 args
+    //                    chestT     textID         graphicID          effect
     [0x01] = ITEM_ROW(0x4D, 1, 0x8E, 0x0032, 0x00CE, 0x20, bombs_to_rupee, no_effect, -1, -1), // Bombs (5)
     [0x02] = ITEM_ROW(0x4D, 1, 0x8C, 0x0034, 0x00BB, 0x12, no_upgrade, no_effect, -1, -1), // Deku Nuts (5)
-    [0x03] = ITEM_ROW(0x4D, 1, 0x09, 0x0033, 0x00D9, 0x28, no_upgrade, no_effect, -1, -1), // Bombchu (10)
+    [0x03] = ITEM_ROW(0x4D, 1, 0x41, 0x0033, 0x00D9, 0x28, no_upgrade, give_bombchu, 10, -1), // Bombchu (10)
     [0x04] = ITEM_ROW(0x53, 0, 0x03, 0x0031, 0x00E9, 0x35, no_upgrade, no_effect, -1, -1), // Fairy Bow
     [0x05] = ITEM_ROW(0x53, 0, 0x06, 0x0030, 0x00E7, 0x33, no_upgrade, no_effect, -1, -1), // Fairy Slingshot
     [0x06] = ITEM_ROW(0x53, 0, 0x0E, 0x0035, 0x00E8, 0x34, no_upgrade, no_effect, -1, -1), // Boomerang
@@ -87,7 +89,7 @@ item_row_t item_table[] = {
     [0x2F] = ITEM_ROW(0x53, 0, 0x46, 0x0054, 0x0157, 0x5F, no_upgrade, no_effect, -1, -1), // Hover Boots
     [0x30] = ITEM_ROW(0x53, 0, 0x4B, 0x0056, 0x00BE, 0x16, no_upgrade, no_effect, -1, -1), // Big Quiver
     [0x31] = ITEM_ROW(0x53, 0, 0x4C, 0x0057, 0x00BE, 0x17, no_upgrade, no_effect, -1, -1), // Biggest Quiver
-    [0x32] = ITEM_ROW(0x53, 0, 0x4D, 0x0058, 0x00BF, 0x18, no_upgrade, no_effect, -1, -1), // Bomb Bag
+    [0x32] = ITEM_ROW(0x53, 0, 0x4D, 0x0058, 0x00BF, 0x18, no_upgrade, give_bomb_bag, -1, -1), // Bomb Bag
     [0x33] = ITEM_ROW(0x53, 0, 0x4E, 0x0059, 0x00BF, 0x19, no_upgrade, no_effect, -1, -1), // Big Bomb Bag
     [0x34] = ITEM_ROW(0x53, 0, 0x4F, 0x005A, 0x00BF, 0x1A, no_upgrade, no_effect, -1, -1), // Biggest Bomb Bag
     [0x35] = ITEM_ROW(0x53, 0, 0x51, 0x005B, 0x012D, 0x49, no_upgrade, no_effect, -1, -1), // Silver Gauntlets
@@ -143,8 +145,8 @@ item_row_t item_table[] = {
     [0x67] = ITEM_ROW(0x4D, 1, 0x90, 0x0032, 0x00CE, 0x20, bombs_to_rupee, no_effect, -1, -1), // Bombs (20)
     [0x68] = ITEM_ROW(0x4D, 1, 0x91, 0x0032, 0x00CE, 0x20, bombs_to_rupee, no_effect, -1, -1), // Bombs (30)
     [0x69] = ITEM_ROW(0x4D, 1, 0x95, 0x00DC, 0x0119, 0x48, seeds_to_rupee, no_effect, -1, -1), // Deku Seeds (30)
-    [0x6A] = ITEM_ROW(0x4D, 1, 0x96, 0x0033, 0x00D9, 0x28, no_upgrade, no_effect, -1, -1), // Bombchu (5)
-    [0x6B] = ITEM_ROW(0x4D, 1, 0x97, 0x0033, 0x00D9, 0x28, no_upgrade, no_effect, -1, -1), // Bombchu (20)
+    [0x6A] = ITEM_ROW(0x4D, 1, 0x41, 0x0033, 0x00D9, 0x28, no_upgrade, give_bombchu, 5, -1), // Bombchu (5)
+    [0x6B] = ITEM_ROW(0x4D, 1, 0x41, 0x0033, 0x00D9, 0x28, no_upgrade, give_bombchu, 20, -1), // Bombchu (20)
     [0x6C] = ITEM_ROW(0x53, 0, 0x19, 0x0047, 0x00F4, 0x3F, no_upgrade, no_effect, -1, -1), // Fish (Refill)
     [0x6D] = ITEM_ROW(0x53, 0, 0x1D, 0x007A, 0x0174, 0x68, no_upgrade, no_effect, -1, -1), // Bugs (Refill)
     [0x6E] = ITEM_ROW(0x53, 0, 0x1C, 0x005D, 0x0173, 0x67, no_upgrade, no_effect, -1, -1), // Blue Fire (Refill)
