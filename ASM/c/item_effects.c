@@ -116,22 +116,20 @@ void fill_wallet_upgrade(z64_file_t *save, int16_t arg1, int16_t arg2) {
 }
 
 void give_bombchu(z64_file_t *save, int16_t arg1, int16_t arg2) {
-    if (BOMBCHUS_IN_LOGIC) {
+    if (BOMBCHUS_IN_LOGIC || save->bomb_bag) {
         // Add Bombchu item slot
         save->items[Z64_SLOT_BOMBCHU] = Z64_ITEM_BOMBCHU;
     }
 
     // Add ammo
-    uint8_t ammo = (uint8_t)save->ammo[8];
-    ammo += (uint8_t)arg1;
-    if (ammo > MAX_BOMBCHU) {
-        ammo = MAX_BOMBCHU;
+    save->ammo[8] += (int8_t)arg1;
+    if (save->ammo[8] > MAX_BOMBCHU) {
+        save->ammo[8] = MAX_BOMBCHU;
     }
-    save->ammo[8] = (int8_t)ammo;
 }
 
 void give_bomb_bag(z64_file_t *save, int16_t arg1, int16_t arg2) {
-    if (!BOMBCHUS_IN_LOGIC) {
+    if (!BOMBCHUS_IN_LOGIC && save->ammo[8]) {
         // Add Bombchu item slot when obtaining Bomb Bag
         save->items[Z64_SLOT_BOMBCHU] = Z64_ITEM_BOMBCHU;
     }
