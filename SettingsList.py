@@ -1693,7 +1693,7 @@ setting_infos = [
         name           = 'grottos_attract_navi',
         gui_text       = 'Hidden Grottos Attract Navi',
         gui_tooltip    = '''\
-            Navi will turn green and fly to nearby invisible grottos.
+            Navi will change color and fly to nearby invisible grottos.
         ''',
         shared         = True,
     ),
