@@ -1012,6 +1012,9 @@ def patch_rom(spoiler:Spoiler, world:World, rom:Rom):
     # Make all chest opening animations fast
     rom.write_byte(rom.sym('FAST_CHESTS'), int(world.fast_chests))
 
+    # Attract Navi to Grottos
+    if world.grottos_attract_navi:
+        rom.write_byte(rom.sym('NAVI_GROTTO_ATTRACTION'), 3) # 3 = distance of 350
 
     # Set up Rainbow Bridge conditions
     symbol = rom.sym('RAINBOW_BRIDGE_CONDITION')

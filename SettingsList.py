@@ -1690,6 +1690,14 @@ setting_infos = [
         shared         = True,
     ),
     Checkbutton(
+        name           = 'grottos_attract_navi',
+        gui_text       = 'Hidden Grottos Attract Navi',
+        gui_tooltip    = '''\
+            Navi will turn green and fly to nearby invisible grottos.
+        ''',
+        shared         = True,
+    ),
+    Checkbutton(
         name           = 'start_with_fast_travel',
         gui_text       = 'Start with Fast Travel',
         gui_tooltip    = '''\
