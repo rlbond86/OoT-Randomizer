@@ -120,3 +120,20 @@ handle_grotto_load:
 @@return:
     jr      ra
     move    v0, a0
+
+
+; Code run after grotto construction
+; a0 = actor instance
+door_ana_init_post:
+    lh      t1, 0x001C(a0) ; actor variable
+    andi    t1, t1, 0x0300 ; t1 is nonzero if it's a hidden grotto
+    beqz    t1, @@done
+    lui     t0, 0x3B03
+    ori     t0, t0, 0x126F ; 0.002
+    sw      t0, 0x0050(a0) ; x-scale
+    sw      t0, 0x0058(a0) ; z-scale
+    li      t0, 0x3C23D70A ; 0.01
+    sw      t0, 0x0054(a0) ; y-scale
+@@done:
+    jr      ra
+    nop
