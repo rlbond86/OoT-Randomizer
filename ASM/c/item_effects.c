@@ -41,7 +41,7 @@ void give_triforce_piece(z64_file_t *save, int16_t arg1, int16_t arg2) {
 void give_tycoon_wallet(z64_file_t *save, int16_t arg1, int16_t arg2) {
     save->wallet = 3;
     if(MAX_RUPEES)
-        save->rupees = rupee_cap[arg1];
+        save->rupees += rupee_cap[arg1] - rupee_cap[arg1-1];
 }
 
 void give_biggoron_sword(z64_file_t *save, int16_t arg1, int16_t arg2) {
@@ -109,5 +109,5 @@ void give_bean_pack(z64_file_t *save, int16_t arg1, int16_t arg2) {
 
 void fill_wallet_upgrade(z64_file_t *save, int16_t arg1, int16_t arg2) {
     if(MAX_RUPEES)
-        save->rupees = rupee_cap[arg1];
+        save->rupees += rupee_cap[arg1] - rupee_cap[arg1-1];
 }
