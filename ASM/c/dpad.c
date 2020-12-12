@@ -16,18 +16,15 @@ typedef void(*usebutton_t)(z64_game_t *game, z64_link_t *link, uint8_t item, uin
 
 void cycle_items();
 
-typedef union
-{
-    // 0 = none, otherwise 1 + slot
-    struct {
-        uint16_t left  : 5;
-        uint16_t down  : 5;
-        uint16_t right : 5;
-    };
-    uint16_t bits;
-} packed_slot_array_t;
+#define NULL_SLOT -1
+typedef struct {
+    int8_t slot[3];
+} c_button_configuration;
 
-static packed_slot_array_t item_slots[2] = { {.bits = 0}, {.bits = 0} };
+static c_button_configuration backup_configurations[2] = { 
+    {NULL_SLOT, NULL_SLOT, NULL_SLOT}, 
+    {NULL_SLOT, NULL_SLOT, NULL_SLOT} 
+};
 
 
 void handle_dpad() {
@@ -58,6 +55,7 @@ void handle_dpad() {
             z64_UpdateItemButton(&z64_game, 1);
             z64_UpdateItemButton(&z64_game, 2);
             z64_UpdateItemButton(&z64_game, 3);
+            z64_playsfx(0x835, (z64_xyzf_t*)0x80104394, 0x04, (float*)0x801043A0, (float*)0x801043A0, (float*)0x801043A8);
         }
     }
 }
@@ -110,57 +108,131 @@ void draw_dpad() {
 #define ADULT_ONLY  0x1
 #define CHILD_ONLY  0x2
 #define BOTH_AGES   0x3
-#define NEVER_EQUIP 0x0
 
-static const uint8_t ITEM_AGE_USABILITY[25] = {
-    NEVER_EQUIP,
+static const uint8_t ITEM_AGE_USABILITY[24] = {
     CHILD_ONLY, BOTH_AGES,  BOTH_AGES, ADULT_ONLY, ADULT_ONLY, BOTH_AGES,
     CHILD_ONLY, BOTH_AGES,  BOTH_AGES, ADULT_ONLY, ADULT_ONLY, BOTH_AGES,
     CHILD_ONLY, BOTH_AGES, CHILD_ONLY, ADULT_ONLY, ADULT_ONLY, BOTH_AGES,
      BOTH_AGES, BOTH_AGES,  BOTH_AGES,  BOTH_AGES, ADULT_ONLY, CHILD_ONLY
 };
 
-int32_t from_single_packed_slot(int32_t unpacked_slot, int8_t* item) {
-    uint8_t age_code = 1 + (uint8_t)z64_file.link_age; // 0x1 = adult, 0x2 = child
-    if (unpacked_slot != 0 && (ITEM_AGE_USABILITY[unpacked_slot] & age_code) != 0x0) {
-        --unpacked_slot;
-        *item = z64_file.items[unpacked_slot];
-        return unpacked_slot;
-    }
-    *item = -1;
-    return 0;
-}
-
-void from_packed_slot_array(packed_slot_array_t slots, int8_t* button_items, int8_t* c_slots) {
-    ++button_items; // Skip B button
-    int8_t unpacked_slots[3] = {slots.left, slots.down, slots.right};
-    int8_t* unpacked_slots_ptr = unpacked_slots;
-    
-    for (int button = 0; button < 3; ++button) {
-        *c_slots++ = (int8_t)from_single_packed_slot(*unpacked_slots_ptr++, button_items++);
-    }
-}
-
-uint32_t to_single_packed_slot(int8_t button_item, int32_t c_slot) {
-    if (button_item == -1) {
+int is_valid_slot(int8_t slot) {
+    if (slot < 0) {
         return 0;
     }
-    return c_slot + 1;
+    else if ((ITEM_AGE_USABILITY[slot] & (z64_file.link_age + 1)) == 0x0) {
+        return 0;
+    }
+    int8_t item = z64_file.items[slot];
+    if (item == Z64_ITEM_NULL || item == Z64_ITEM_SOLD_OUT) {
+        return 0;
+    }
+    return 1;
 }
 
-packed_slot_array_t to_packed_slot_array(const int8_t* button_items, const int8_t* c_slots) {
-    ++button_items; // Skip B button
-    packed_slot_array_t packed;
-    packed.left  = (uint8_t)to_single_packed_slot(*button_items++, *c_slots++);
-    packed.down  = (uint8_t)to_single_packed_slot(*button_items++, *c_slots++);
-    packed.right = (uint8_t)to_single_packed_slot(*button_items++, *c_slots++);
-    return packed;
+void clear_invalid_slot(int8_t* slot) {
+    if (!is_valid_slot(*slot)) {
+        *slot = Z64_ITEM_NULL;
+    }
+}
+
+int is_slot_unique(int8_t slot, const int8_t* all_slots) {
+    return all_slots[0] != slot && all_slots[1] != slot && all_slots[2] != slot;
+}
+
+int8_t populate_empty_slot(int8_t next_slot, int8_t* slot, const int8_t* all_slots) {
+    if (*slot != NULL_SLOT) {
+        return next_slot;
+    }
+    
+    while (next_slot < 24) {
+        if (is_valid_slot(next_slot)) {
+            if (is_slot_unique(next_slot, all_slots)) {
+                *slot = next_slot;
+                return next_slot + 1;
+            }
+        }
+        ++next_slot;
+    }
+    
+    return next_slot;
+}
+
+void rearrange_populated_to_match(const uint8_t* required, int idx, int8_t* all_slots) {
+    // Move items if some slots went from populated to empty
+    // Avoids some graphical issues
+    if (all_slots[idx] == NULL_SLOT) {
+        // Attempt to find another item to move here
+        for (int j = 0; j < 3; ++j) {
+            if (!required[j] && all_slots[j] != NULL_SLOT) {
+                all_slots[idx] = all_slots[j];
+                all_slots[j] = NULL_SLOT;
+                break;
+            }
+        }
+    }
+}
+
+void populate_empty_c_buttons(const c_button_configuration* old_buttons, c_button_configuration* new_buttons) {
+    uint8_t old_populated[3];
+
+    // Get which buttons are populated and remove invalid population
+    for (int i = 0; i < 3; ++i) {
+        old_populated[i] = is_valid_slot(old_buttons->slot[i]);
+        clear_invalid_slot(&new_buttons->slot[i]);
+    }
+    
+    // Remove duplicates
+    for (int i = 0; i < 3; ++i) {
+        for (int j = i+1; j < 3; ++j) {
+            if (new_buttons->slot[i] == new_buttons->slot[j]) {
+                new_buttons->slot[j] = NULL_SLOT;
+            }
+        }
+    }
+
+    // Attempt to populate empty slots
+    int8_t slot = 0;
+    for (int i = 0; i < 3; ++i) {
+        slot = populate_empty_slot(slot, &new_buttons->slot[i], new_buttons->slot);
+    }
+
+    // Prefer slots that were populated before (addresses some graphical issues)
+    for (int i = 0; i < 3; ++i) {
+        if (old_populated[i]) {
+            rearrange_populated_to_match(old_populated, i, new_buttons->slot);
+        }
+    }
+}
+
+void get_c_buttons_from_file(const int8_t* file_button_items, const int8_t* file_c_button_slots, c_button_configuration* config) {
+    ++file_button_items; // Skip B button
+    for (int i = 0; i < 3; ++i) {
+        config->slot[i] = file_button_items[i] != Z64_ITEM_NULL ? file_c_button_slots[i] : NULL_SLOT;
+    }
+}
+
+void put_c_buttons_to_file(const c_button_configuration* config, int8_t* file_button_items, int8_t* file_c_button_slots) {
+    ++file_button_items; // Skip B button
+    for (int i = 0; i < 3; ++i) {
+        if (is_valid_slot(config->slot[i])) {
+            file_c_button_slots[i] = config->slot[i];
+            file_button_items[i] = z64_file.items[file_c_button_slots[i]];
+        }
+        else {
+            file_c_button_slots[i] = Z64_SLOT_NUT; // Usable by both adult and child
+            file_button_items[i] = Z64_ITEM_NULL;
+        }
+    }
 }
 
 void cycle_items() {
     int age = z64_file.link_age;
-    packed_slot_array_t old = to_packed_slot_array(z64_file.button_items, z64_file.c_button_slots);
-    from_packed_slot_array(item_slots[z64_file.link_age], z64_file.button_items, z64_file.c_button_slots);
-    item_slots[z64_file.link_age] = old;
+    c_button_configuration old;
+    c_button_configuration* new = &backup_configurations[z64_file.link_age];
+    get_c_buttons_from_file(z64_file.button_items, z64_file.c_button_slots, &old);
+    populate_empty_c_buttons(&old, new);
+    put_c_buttons_to_file(new, z64_file.button_items, z64_file.c_button_slots);
+    *new = old;
 }
 
