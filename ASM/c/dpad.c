@@ -130,9 +130,11 @@ int is_valid_slot(int8_t slot) {
     return 1;
 }
 
-void clear_invalid_slot(int8_t* slot) {
-    if (!is_valid_slot(*slot)) {
-        *slot = Z64_ITEM_NULL;
+void clear_invalid_slots(c_button_configuration* config) {
+    for (int i = 0; i < 3; ++i) {
+        if (!is_valid_slot(config->slot[i])) {
+            config->slot[i] = Z64_ITEM_NULL;
+        }
     }
 }
 
@@ -174,13 +176,7 @@ void rearrange_populated_to_match(const uint8_t* required, int idx, int8_t* all_
 }
 
 void populate_empty_c_buttons(const c_button_configuration* old_buttons, c_button_configuration* new_buttons) {
-    uint8_t old_populated[3];
-
-    // Get which buttons are populated and remove invalid population
-    for (int i = 0; i < 3; ++i) {
-        old_populated[i] = is_valid_slot(old_buttons->slot[i]);
-        clear_invalid_slot(&new_buttons->slot[i]);
-    }
+    clear_invalid_slots(new_buttons);
     
     // Remove duplicates
     for (int i = 0; i < 3; ++i) {
@@ -199,9 +195,9 @@ void populate_empty_c_buttons(const c_button_configuration* old_buttons, c_butto
 
     // Prefer slots that were populated before (addresses some graphical issues)
     for (int i = 0; i < 3; ++i) {
-        if (old_populated[i]) {
-            rearrange_populated_to_match(old_populated, i, new_buttons->slot);
-        }
+//        if (old_populated[i]) {
+//            rearrange_populated_to_match(old_populated, i, new_buttons->slot);
+//        }
     }
 }
 
