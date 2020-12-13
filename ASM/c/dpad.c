@@ -15,7 +15,6 @@ typedef void(*usebutton_t)(z64_game_t *game, z64_link_t *link, uint8_t item, uin
 #define z64_playsfx   ((playsfx_t)      0x800C806C)
 #define z64_usebutton ((usebutton_t)    0x8038C9A0)
 
-
 void handle_dpad() {
 
     pad_t pad_pressed = z64_game.common.input[0].pad_pressed;
@@ -52,15 +51,15 @@ void handle_dpad() {
             for (int i = 0; i < 3; ++i) {
                 z64_file.button_usable[i+1] = -1; // Prevent using prohibited item on switch frame
             }
-            update_c_buttons_next_frame = 1;
+            update_c_buttons_next_frame = 1; // Requires a 1-frame delay to avoid graphical issues
             
             // If not in menu, dim buttons initially
             if (z64_game.pause_ctxt.state == 0) {
                 z64_game.hud_alpha_channels.cl_button = 0x46;
                 z64_game.hud_alpha_channels.cd_button = 0x46;
                 z64_game.hud_alpha_channels.cr_button = 0x46;
+                z64_playsfx(0x835, (z64_xyzf_t*)0x80104394, 0x04, (float*)0x801043A0, (float*)0x801043A0, (float*)0x801043A8);
             }
-            z64_playsfx(0x835, (z64_xyzf_t*)0x80104394, 0x04, (float*)0x801043A0, (float*)0x801043A0, (float*)0x801043A8);
         }
     }
 }

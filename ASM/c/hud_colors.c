@@ -65,7 +65,6 @@ void update_hud_colors() {
 
   (*a_button) = CFG_A_BUTTON_COLOR;
   (*b_button) = CFG_B_BUTTON_COLOR;
-  
   (*c_button) = c_button_color();
 
   (*a_note_r) = CFG_A_NOTE_COLOR.r;
