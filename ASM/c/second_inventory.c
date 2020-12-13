@@ -1,6 +1,8 @@
 #include "second_inventory.h"
 #include "z64.h"
 
+extern colorRGB16_t CFG_C_BUTTON_COLOR;
+
 #define NULL_SLOT -1
 typedef struct {
     int8_t slot[3];
@@ -107,3 +109,36 @@ void cycle_c_button_items() {
 int c_button_item_index() {
     return config_index[z64_file.link_age];
 }
+
+#define SWAP_VALUE(T, x, y) do { T temp = x; x = y; y = temp; } while(0)
+
+static void rotate_color(colorRGB16_t* clr) {
+    if (clr->r == clr->g && clr->g == clr->b) return;
+    
+    uint16_t* largest = &clr->r;
+    uint16_t* middle = &clr->g;
+    uint16_t* smallest = &clr->b;
+
+    // Sort
+    if (*largest < *middle) {
+        SWAP_VALUE(uint16_t*, largest, middle);
+    }
+    if (*middle < *smallest) {
+        SWAP_VALUE(uint16_t*, middle, smallest);
+    }
+    if (*largest < *middle) {
+        SWAP_VALUE(uint16_t*, largest, middle);
+    }
+    
+    *middle = *largest - *middle + *smallest;
+    SWAP_VALUE(uint16_t, *largest, *smallest);
+}
+
+colorRGB16_t c_button_color() {
+    colorRGB16_t clr = CFG_C_BUTTON_COLOR;
+    if (c_button_item_index()) {
+        rotate_color(&clr);
+    }
+    return clr;
+}
+
