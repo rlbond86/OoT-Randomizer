@@ -78,38 +78,12 @@ void populate_empty_slots(const c_button_configuration* old_buttons, c_button_co
         index = get_empty_slot_index(new_buttons);
         if (index == -1) return;
     }
-    
-    // Backup -- attempt to use old buttons
-    for (int old_idx = 0; old_idx < 3; ++old_idx) {
-        int slot_val = old_buttons->slot[old_idx];
-        if (slot_val == NULL_SLOT) continue;
-        new_buttons->slot[index] = slot_val;
-        index = get_empty_slot_index(new_buttons);
-        if (index == -1) return;        
-    }
-}
-
-void rearrange_populated_to_match(const c_button_configuration* old_buttons, c_button_configuration* new_buttons) {
-    // Move items if some slots went from populated to empty
-    // Avoids some graphical issues
-    for (int i = 0; i < 3; ++i) {
-        if (old_buttons->slot[i] != NULL_SLOT && new_buttons->slot[i] == NULL_SLOT) {
-            for (int j = 0; j < 3; ++j) {
-                if (i != j && old_buttons->slot[j] == NULL_SLOT && new_buttons->slot[j] != NULL_SLOT) {
-                    new_buttons->slot[i] = new_buttons->slot[j];
-                    new_buttons->slot[j] = NULL_SLOT;
-                    break;
-                }
-            }
-        }
-    }
 }
 
 void populate_empty_c_buttons(const c_button_configuration* old_buttons, c_button_configuration* new_buttons) {
     clear_invalid_slots(new_buttons);
     remove_duplicate_slots(new_buttons);
     populate_empty_slots(old_buttons, new_buttons);
-    rearrange_populated_to_match(old_buttons, new_buttons);
 }
 
 void get_c_buttons_from_file(const int8_t* file_button_items, const int8_t* file_c_button_slots, c_button_configuration* config) {
