@@ -78,8 +78,11 @@ void draw_dpad() {
         sprite_load(db, &dpad_sprite, 0, 1);
         sprite_draw(db, &dpad_sprite, 0, 271, 64, 16, 16);
 
-        if (alpha == 0xFF && !CAN_USE_DPAD)
-            gDPSetPrimColor(db->p++, 0, 0, 0xFF, 0xFF, 0xFF, 0x46);
+        uint16_t modified_alpha = alpha;
+        if (alpha == 0xFF && !CAN_USE_DPAD) {
+            modified_alpha = 0x46;
+            gDPSetPrimColor(db->p++, 0, 0, 0xFF, 0xFF, 0xFF, modified_alpha);
+        }
 
         if (z64_file.iron_boots && z64_file.link_age==0) {
             sprite_load(db, &items_sprite, 69, 1);
@@ -105,6 +108,11 @@ void draw_dpad() {
             sprite_load(db, &items_sprite, z64_file.items[0x07], 1);
             sprite_draw(db, &items_sprite, 0, 273, 77, 12,12);
         }
+
+        colorRGB16_t c_color = opposite_c_button_color();
+        gDPSetPrimColor(db->p++, 0, 0, c_color.r, c_color.g, c_color.b, modified_alpha / 2);
+        sprite_load(db, &c_button_sprite, 0, 1);
+        sprite_draw(db, &c_button_sprite, 0, 275, 56, 8, 8);
 
         gDPPipeSync(db->p++);
     }

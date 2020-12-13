@@ -88,6 +88,11 @@ sprite_t heart_sprite = {
     G_IM_FMT_IA, G_IM_SIZ_8b, 1
 };
 
+sprite_t c_button_sprite = {
+    NULL, 16, 16, 1,
+    G_IM_FMT_IA, G_IM_SIZ_8b, 1
+};
+
 int sprite_bytes_per_tile(sprite_t *sprite) {
     return sprite->tile_w * sprite->tile_h * sprite->bytes_per_texel;
 }
@@ -151,6 +156,11 @@ void gfx_init() {
     };
     file_init(&icon_item_dungeon_static);
 
+    file_t nes_font_static = {
+        NULL, z64_nes_font_static_vaddr, z64_nes_font_static_vsize
+    };
+    file_init(&nes_font_static);
+
     stones_sprite.buf = title_static.buf + 0x2A300;
     medals_sprite.buf = title_static.buf + 0x2980;
     items_sprite.buf = icon_item_static.buf;
@@ -168,5 +178,13 @@ void gfx_init() {
     for (int i = 0; i < font_bytes / 2; i++) {
         font_sprite.buf[2*i] = (FONT_TEXTURE[i] >> 4) | 0xF0;
         font_sprite.buf[2*i + 1] = FONT_TEXTURE[i] | 0xF0;
+    }
+
+    int c_button_bytes = sprite_bytes(&c_button_sprite);
+    c_button_sprite.buf = heap_alloc(c_button_bytes);
+    for (int i = 0; i < c_button_bytes / 2; ++i) {
+        uint8_t bits = *(nes_font_static.buf + 0x4080 + i);
+        c_button_sprite.buf[2*i]   = (bits >> 4) | 0xF0;
+        c_button_sprite.buf[2*i+1] =  bits       | 0xF0;
     }
 }

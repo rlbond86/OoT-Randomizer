@@ -106,10 +106,6 @@ void cycle_c_button_items() {
     config_index[age] = !config_index[age];
 }
 
-int c_button_item_index() {
-    return config_index[z64_file.link_age];
-}
-
 #define SWAP_VALUE(T, x, y) do { T temp = x; x = y; y = temp; } while(0)
 
 static void rotate_color(colorRGB16_t* clr) {
@@ -134,11 +130,18 @@ static void rotate_color(colorRGB16_t* clr) {
     SWAP_VALUE(uint16_t, *largest, *smallest);
 }
 
-colorRGB16_t c_button_color() {
+static colorRGB16_t get_c_color(int idx) {
     colorRGB16_t clr = CFG_C_BUTTON_COLOR;
-    if (c_button_item_index()) {
+    if (idx) {
         rotate_color(&clr);
     }
     return clr;
 }
 
+colorRGB16_t c_button_color() {
+    return get_c_color(config_index[z64_file.link_age]);
+}
+
+colorRGB16_t opposite_c_button_color() {
+    return get_c_color(!config_index[z64_file.link_age]);
+}
