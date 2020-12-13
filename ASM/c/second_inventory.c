@@ -40,13 +40,9 @@ void clear_invalid_slots(c_button_configuration* config) {
 }
 
 void remove_duplicate_slots(c_button_configuration* config) {
-    for (int i = 0; i < 3; ++i) {
-        for (int j = i+1; j < 3; ++j) {
-            if (config->slot[i] == config->slot[j]) {
-                config->slot[j] = NULL_SLOT;
-            }
-        }
-    }
+    if (config->slot[0] == config->slot[1]) {config->slot[1] = NULL_SLOT;}
+    if (config->slot[1] == config->slot[2]) {config->slot[2] = NULL_SLOT;}
+    if (config->slot[0] == config->slot[2]) {config->slot[2] = NULL_SLOT;}
 }
 
 int is_slot_in_config(int8_t slot_val, const c_button_configuration* config) {
@@ -57,7 +53,7 @@ int is_slot_in_config(int8_t slot_val, const c_button_configuration* config) {
 
 int get_empty_slot_index(const c_button_configuration* config) {
     for (int i = 0; i < 3; ++i) {
-        if (config->slot[i] != NULL_SLOT) {
+        if (config->slot[i] == NULL_SLOT) {
             return i;
         }
     }
@@ -131,7 +127,7 @@ void put_c_buttons_to_file(const c_button_configuration* config, int8_t* file_bu
             file_button_items[i] = z64_file.items[file_c_button_slots[i]];
         }
         else {
-            file_c_button_slots[i] = Z64_SLOT_NUT; // Usable by both adult and child
+            file_c_button_slots[i] = NULL_SLOT; // Usable by both adult and child
             file_button_items[i] = Z64_ITEM_NULL;
         }
     }

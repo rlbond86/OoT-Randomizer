@@ -20,6 +20,14 @@ void handle_dpad() {
 
     pad_t pad_pressed = z64_game.common.input[0].pad_pressed;
 
+    static int8_t update_c_buttons_next_frame = 0;
+    if (update_c_buttons_next_frame) {
+        update_c_buttons_next_frame = 0;
+        for (int i = 0; i < 3; ++i) {
+            z64_UpdateItemButton(&z64_game, i+1);
+        }
+    }
+
     if (CAN_USE_DPAD && DISPLAY_DPAD){
         if(z64_file.link_age == 0) {
             if (pad_pressed.dl && z64_file.iron_boots) {
@@ -41,9 +49,17 @@ void handle_dpad() {
         }
         if (pad_pressed.du) {
             cycle_c_button_items();
-            z64_UpdateItemButton(&z64_game, 1);
-            z64_UpdateItemButton(&z64_game, 2);
-            z64_UpdateItemButton(&z64_game, 3);
+            for (int i = 0; i < 3; ++i) {
+                z64_file.button_usable[i+1] = -1; // Prevent using prohibited item on switch frame
+            }
+            update_c_buttons_next_frame = 1;
+            
+            // If not in menu, dim buttons initially
+            if (z64_game.hud_alpha_channels.start_button != 0xFF) {
+                z64_game.hud_alpha_channels.cl_button = 0x46;
+                z64_game.hud_alpha_channels.cd_button = 0x46;
+                z64_game.hud_alpha_channels.cr_button = 0x46;
+            }
             z64_playsfx(0x835, (z64_xyzf_t*)0x80104394, 0x04, (float*)0x801043A0, (float*)0x801043A0, (float*)0x801043A8);
         }
     }
