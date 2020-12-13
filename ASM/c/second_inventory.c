@@ -48,8 +48,8 @@ void remove_duplicate_slots(c_button_configuration* config) {
 }
 
 int is_slot_in_config(int8_t slot_val, const c_button_configuration* config) {
-    return     config->slot[0] == slot_val 
-            || config->slot[1] == slot_val 
+    return     config->slot[0] == slot_val
+            || config->slot[1] == slot_val
             || config->slot[2] == slot_val;
 }
 
@@ -88,9 +88,9 @@ void put_c_buttons_to_file(const c_button_configuration* config, int8_t* file_bu
     }
 }
 
-static c_button_configuration backup_configurations[2] = { 
-    {NULL_SLOT, NULL_SLOT, NULL_SLOT}, 
-    {NULL_SLOT, NULL_SLOT, NULL_SLOT} 
+static c_button_configuration backup_configurations[2] = {
+    {NULL_SLOT, NULL_SLOT, NULL_SLOT},
+    {NULL_SLOT, NULL_SLOT, NULL_SLOT}
 };
 
 static int8_t config_index[2] = {0, 0};
@@ -110,7 +110,7 @@ void cycle_c_button_items() {
 
 static void rotate_color(colorRGB16_t* clr) {
     if (clr->r == clr->g && clr->g == clr->b) return;
-    
+
     uint16_t* largest = &clr->r;
     uint16_t* middle = &clr->g;
     uint16_t* smallest = &clr->b;
@@ -125,7 +125,7 @@ static void rotate_color(colorRGB16_t* clr) {
     if (*largest < *middle) {
         SWAP_VALUE(uint16_t*, largest, middle);
     }
-    
+
     *middle = *largest - *middle + *smallest;
     SWAP_VALUE(uint16_t, *largest, *smallest);
 }
