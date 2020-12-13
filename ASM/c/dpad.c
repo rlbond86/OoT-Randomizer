@@ -28,7 +28,7 @@ void handle_dpad() {
         }
     }
 
-    if (CAN_USE_DPAD && DISPLAY_DPAD){
+    if (CAN_USE_DPAD){
         if(z64_file.link_age == 0) {
             if (pad_pressed.dl && z64_file.iron_boots) {
                 if (z64_file.equip_boots == 2) z64_file.equip_boots = 1;
@@ -55,7 +55,7 @@ void handle_dpad() {
             update_c_buttons_next_frame = 1;
             
             // If not in menu, dim buttons initially
-            if (z64_game.hud_alpha_channels.start_button != 0xFF) {
+            if (z64_game.pause_ctxt.state == 0) {
                 z64_game.hud_alpha_channels.cl_button = 0x46;
                 z64_game.hud_alpha_channels.cd_button = 0x46;
                 z64_game.hud_alpha_channels.cr_button = 0x46;
@@ -67,7 +67,7 @@ void handle_dpad() {
 
 void draw_dpad() {
     z64_disp_buf_t *db = &(z64_ctxt.gfx->overlay);
-    if (DISPLAY_DPAD && CFG_DISPLAY_DPAD) {
+    if (CFG_DISPLAY_DPAD) {
         gSPDisplayList(db->p++, &setup_db);
         gDPPipeSync(db->p++);
         gDPSetCombineMode(db->p++, G_CC_MODULATEIA_PRIM, G_CC_MODULATEIA_PRIM);
