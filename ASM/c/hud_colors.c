@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "hud_colors.h"
+#include "second_inventory.h"
 
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
 
@@ -45,6 +46,40 @@ colorRGB16_t* text_cursor_inner_max   = (colorRGB16_t*)0x80112F0E;
 colorRGB16_t* text_cursor_border_base  = (colorRGB16_t*)0x80112F14;
 colorRGB16_t* text_cursor_border_max   = (colorRGB16_t*)0x80112F1A;
 
+static void rotate_color(colorRGB16_t* clr) {
+    if (clr->r == clr->g && clr->g == clr->b) return;
+    
+    uint16_t* largest = &clr->r;
+    uint16_t* middle = &clr->g;
+    uint16_t* smallest = &clr->b;
+
+    // Sort
+    uint16_t* temp;
+    if (*largest < *middle) {
+        temp = largest;
+        largest = middle;
+        middle = temp;
+    }
+    if (*middle < *smallest) {
+        temp = middle;
+        middle = smallest;
+        smallest = temp;
+    }
+    if (*largest < *middle) {
+        temp = largest;
+        largest = middle;
+        middle = temp;
+    }
+    
+    uint16_t largest_val  = *largest;
+    uint16_t middle_val   = *middle;
+    uint16_t smallest_val = *smallest;
+
+    *largest = smallest_val;
+    *smallest = largest_val;
+    *middle = largest_val - middle_val + smallest_val;
+}
+
 void update_hud_colors() {
   colorRGB16_t heartColor = CFG_HEART_COLOR;
 
@@ -65,7 +100,12 @@ void update_hud_colors() {
 
   (*a_button) = CFG_A_BUTTON_COLOR;
   (*b_button) = CFG_B_BUTTON_COLOR;
-  (*c_button) = CFG_C_BUTTON_COLOR;
+  
+  colorRGB16_t cButtonColor = CFG_C_BUTTON_COLOR;
+  if (c_button_item_index()) {
+      rotate_color(&cButtonColor);
+  }
+  (*c_button) = cButtonColor;
 
   (*a_note_r) = CFG_A_NOTE_COLOR.r;
   (*a_note_g) = CFG_A_NOTE_COLOR.g;
