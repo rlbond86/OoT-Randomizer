@@ -60,30 +60,9 @@ int get_empty_slot_index(const c_button_configuration* config) {
     return -1;
 }
 
-void populate_empty_slots(const c_button_configuration* old_buttons, c_button_configuration* new_buttons) {
-    int index = get_empty_slot_index(new_buttons);
-    if (index == -1) return;
-    
-    for (int slot_val = 0; slot_val < 24; ++slot_val) {
-        if (is_slot_in_config(slot_val, old_buttons)) {
-            continue;
-        }
-        if (is_slot_in_config(slot_val, new_buttons)) {
-            continue;
-        }
-        if (!is_valid_slot(slot_val)) {
-            continue;
-        }
-        new_buttons->slot[index] = slot_val;
-        index = get_empty_slot_index(new_buttons);
-        if (index == -1) return;
-    }
-}
-
-void populate_empty_c_buttons(const c_button_configuration* old_buttons, c_button_configuration* new_buttons) {
+void validate_c_buttons(c_button_configuration* new_buttons) {
     clear_invalid_slots(new_buttons);
     remove_duplicate_slots(new_buttons);
-    populate_empty_slots(old_buttons, new_buttons);
 }
 
 void get_c_buttons_from_file(const int8_t* file_button_items, const int8_t* file_c_button_slots, c_button_configuration* config) {
@@ -119,7 +98,7 @@ void cycle_c_button_items() {
     c_button_configuration old;
     c_button_configuration* new = &backup_configurations[age];
     get_c_buttons_from_file(z64_file.button_items, z64_file.c_button_slots, &old);
-    populate_empty_c_buttons(&old, new);
+    validate_c_buttons(new);
     put_c_buttons_to_file(new, z64_file.button_items, z64_file.c_button_slots);
     *new = old;
     config_index[age] = !config_index[age];
